@@ -86,7 +86,7 @@ class RandEdgeSampler(object):
         self.src_list_uni = np.unique(self.src_list)
         self.dst_list_uni = np.unique(self.dst_list)
         self.edge = list(zip(self.src_list, self.dst_list))   
-        self.edge_list = torch.stack([torch.Tensor(self.src_list), torch.Tensor(self.dst_list)]) # mj 
+        self.edge_list = torch.stack([torch.Tensor(self.src_list), torch.Tensor(self.dst_list)])
 
         if seed is not None:
             self.seed = seed
