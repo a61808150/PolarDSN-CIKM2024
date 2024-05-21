@@ -272,7 +272,6 @@ class PosEncode(torch.nn.Module):
         self.pos_embeddings = nn.Embedding(num_embeddings=seq_len, embedding_dim=expand_dim)
 
     def forward(self, ts):
-        # ts: [N, L]
         order = ts.argsort()
         ts_emb = self.pos_embeddings(order)
         return ts_emb
@@ -445,9 +444,7 @@ class CAWN(torch.nn.Module):
             subgraph_tgt[4][i] = b / float(cnt)
             subgraph_tgt_z[4][i] = c / float(cnt)
 
-        
-
-        # direction 정보 추가
+    
         for i in range(len(subgraph_src[5])-1):
             self.update_mask(subgraph_src, i)
             self.update_mask(subgraph_tgt, i)
@@ -543,7 +540,7 @@ class CAWN(torch.nn.Module):
         t_records_tmp = [np.expand_dims(cut_time_l, 1)] + t_records
         sign_records_tmp = [np.ones_like(node_records_tmp[0])] + sign_records
         weight_records_tmp = [np.ones_like(node_records_tmp[0])] + weight_records
-        direction_records_tmp = [2*np.ones_like(node_records_tmp[0])] + direction_records #####
+        direction_records_tmp = [2*np.ones_like(node_records_tmp[0])] + direction_records 
 
   
         new_node_records = self.subgraph_tree2walk_one_component(node_records_tmp)
