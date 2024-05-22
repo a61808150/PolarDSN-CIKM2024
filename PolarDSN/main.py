@@ -4,7 +4,7 @@ from eval import *
 from utils import *
 from utils import get_args, EarlyStopMonitor, RandEdgeSampler, set_random_seed
 from train import *
-from module import CAWN
+from module import POLAR
 from graph import NeighborFinder
 import random
 
@@ -190,64 +190,64 @@ rand_samplers = train_rand_sampler, val_rand_sampler
 
 device = torch.device('cuda:{}'.format(GPU))
 # device = torch.device('cpu')
-cawn = CAWN(task = TASK, num_layers=NUM_LAYER, 
+polar = POLAR(task = TASK, num_layers=NUM_LAYER, 
             time_dim = TIME_DIM, pos_dim=POS_DIM, edge_feature_dim = EDGE_FEAT_DIM,
             num_neighbors=NUM_NEIGHBORS, 
             get_checkpoint_path=get_checkpoint_path, time_encoder_type=TIME_ENCODER_TYPE, edge_embedding_type=EDGE_EMBEDDING, neigh_agg=NEIGH_AGG, path_agg=PATH_AGG, co_occurence = COOCC, node_num = num_total_unique_nodes)
 
-cawn.to(device)
-optimizer = torch.optim.Adam(cawn.parameters(), lr=LEARNING_RATE)
+polar.to(device)
+optimizer = torch.optim.Adam(polar.parameters(), lr=LEARNING_RATE)
 criterion = torch.nn.BCELoss()
 criterion_muli = torch.nn.CrossEntropyLoss()
 early_stopper = EarlyStopMonitor(max_round=EARLY_STOP, tolerance=TOLERANCE) 
 
 if TASK == 'link':   
     print("Task: link") 
-    train_val(train_val_data, cawn, BATCH_SIZE, NUM_EPOCH, criterion, optimizer, early_stopper, ngh_finders, rand_samplers, logger)
+    train_val(train_val_data, polar, BATCH_SIZE, NUM_EPOCH, criterion, optimizer, early_stopper, ngh_finders, rand_samplers, logger)
 
 elif TASK == 'link_sign': 
     print("Task: link and sign")  
 
-    train_val_for_multiclass(partial_adj_list, train_val_data, cawn, BATCH_SIZE, NUM_EPOCH, criterion_muli, optimizer, early_stopper, ngh_finders, rand_samplers, logger)
+    train_val_for_multiclass(partial_adj_list, train_val_data, polar, BATCH_SIZE, NUM_EPOCH, criterion_muli, optimizer, early_stopper, ngh_finders, rand_samplers, logger)
 
 # final testing
-cawn.update_ngh_finder(full_ngh_finder)
+polar.update_ngh_finder(full_ngh_finder)
 
 if TASK == 'link':   
-    test_acc, test_ap, test_f1, test_auc = eval_one_epoch('test nodes', cawn, test_rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_e_idx_l)
+    test_acc, test_ap, test_f1, test_auc = eval_one_epoch('test nodes', polar, test_rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_e_idx_l)
     logger.info('Test statistics: {} all nodes -- acc: {}, auc: {}, ap: {}, f1: {}'.format('test', test_acc, test_auc, test_ap, test_f1))
     
     transductive_acc, transductive_ap, transductive_auc, transductive_f1 = [-1]*4
-    transductive_acc, transductive_ap, transductive_f1, transductive_auc = eval_one_epoch('test for transductive nodes', cawn, trans_test_rand_sampler, tr_test_src_l, tr_test_dst_l, tr_test_ts_l, tr_test_label_l, tr_test_e_idx_l)
+    transductive_acc, transductive_ap, transductive_f1, transductive_auc = eval_one_epoch('test for transductive nodes', polar, trans_test_rand_sampler, tr_test_src_l, tr_test_dst_l, tr_test_ts_l, tr_test_label_l, tr_test_e_idx_l)
     logger.info('Test statistics: {} new-new nodes -- acc: {}, auc: {}, ap: {}, f1: {}'.format('trans', transductive_acc, transductive_ap, transductive_auc, transductive_f1))
 
     inductive_acc, inductive_ap, inductive_auc, inductive_f1 = [-1]*4
-    inductive_acc, inductive_ap, inductive_f1, inductive_auc = eval_one_epoch('test for inductive nodes', cawn, induc_test_rand_sampler, nn_test_src_l, nn_test_dst_l, nn_test_ts_l, nn_test_label_l, nn_test_e_idx_l)
+    inductive_acc, inductive_ap, inductive_f1, inductive_auc = eval_one_epoch('test for inductive nodes', polar, induc_test_rand_sampler, nn_test_src_l, nn_test_dst_l, nn_test_ts_l, nn_test_label_l, nn_test_e_idx_l)
     logger.info('Test statistics: {} new-new nodes -- acc: {}, auc: {}, ap: {}, f1: {}'.format('induc', inductive_acc, inductive_auc, inductive_ap, inductive_f1))
     
 
 elif TASK == 'link_sign':
-    test_precision, test_accuracy, test_recall, test_weighted_f1, test_micro_f1, test_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test nodes', cawn, test_rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_weight_l, test_e_idx_l)
+    test_precision, test_accuracy, test_recall, test_weighted_f1, test_micro_f1, test_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test nodes', polar, test_rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_weight_l, test_e_idx_l)
     logger.info('Test statistics: {} all nodes -- '.format('test'))
     logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format(test_precision, test_accuracy, test_recall, test_weighted_f1, test_micro_f1, test_macro_f1))
 
     transductive_precision, transductive_accuracy, transductive_recall, transductive_weighted_f1, transductive_micro_f1, transductive_macro_f1 = [-1]*6
-    transductive_precision, transductive_accuracy, transductive_recall, transductive_weighted_f1, transductive_micro_f1, transductive_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test for inductive nodes', cawn, trans_test_rand_sampler, tr_test_src_l, tr_test_dst_l, tr_test_ts_l, tr_test_label_l, tr_test_weight_l, tr_test_e_idx_l)
+    transductive_precision, transductive_accuracy, transductive_recall, transductive_weighted_f1, transductive_micro_f1, transductive_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test for inductive nodes', polar, trans_test_rand_sampler, tr_test_src_l, tr_test_dst_l, tr_test_ts_l, tr_test_label_l, tr_test_weight_l, tr_test_e_idx_l)
     logger.info('Test statistics: {} new-new nodes -- '.format('trans'))
     logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format(transductive_precision, transductive_accuracy, transductive_recall, transductive_weighted_f1, transductive_micro_f1, transductive_macro_f1))
     
 
     inductive_precision, inductive_accuracy, inductive_recall, inductive_weighted_f1, inductive_micro_f1, inductive_macro_f1 = [-1]*6
-    inductive_precision, inductive_accuracy, inductive_recall, inductive_weighted_f1, inductive_micro_f1, inductive_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test for inductive nodes', cawn, induc_test_rand_sampler, nn_test_src_l, nn_test_dst_l, nn_test_ts_l, nn_test_label_l, nn_test_weight_l, nn_test_e_idx_l)
+    inductive_precision, inductive_accuracy, inductive_recall, inductive_weighted_f1, inductive_micro_f1, inductive_macro_f1 = eval_one_epoch_for_multiclass(full_adj_list, 'test for inductive nodes', polar, induc_test_rand_sampler, nn_test_src_l, nn_test_dst_l, nn_test_ts_l, nn_test_label_l, nn_test_weight_l, nn_test_e_idx_l)
     logger.info('Test statistics: {} new-new nodes -- '.format('induc'))
     logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format(inductive_precision, inductive_accuracy, inductive_recall, inductive_weighted_f1, inductive_micro_f1, inductive_macro_f1))
     
 
 
 # save model
-logger.info('Saving CAWN model ...')
-torch.save(cawn.state_dict(), best_model_path)
-logger.info('CAWN model saved')
+logger.info('Saving POLAR model ...')
+torch.save(polar.state_dict(), best_model_path)
+logger.info('POLAR model saved')
 
 # save one line result
 if TASK == 'link':
