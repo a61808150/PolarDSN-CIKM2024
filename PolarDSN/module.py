@@ -333,11 +333,11 @@ class MeanPool(torch.nn.Module):
         return output, None
 
 
-class CAWN(torch.nn.Module):
+class POLAR(torch.nn.Module):
     def __init__(self, task='link_sign', time_dim=64, pos_dim=32, edge_feature_dim = 1,
                  num_layers=3, num_neighbors=64, 
                  get_checkpoint_path=None, time_encoder_type = 'learn', edge_embedding_type = 'concat', neigh_agg='rnn', path_agg='mean', co_occurence = 'learn_add', node_num=0):
-        super(CAWN, self).__init__()
+        super(POLAR, self).__init__()
         self.logger = logging.getLogger(__name__)
         self.task = task
         self.num_neighbors, self.num_layers = num_neighbors, num_layers
